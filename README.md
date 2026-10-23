@@ -1,19 +1,91 @@
-# WindLedger 🌬️ *(Anonymous Submission: `kjhwr`)*
+# WindLedger 🌬️
 
 > **Know the wind. Know the error. Trade with institutional confidence.**  
-> *UK Day-Ahead Wind Generation Decision & Forecast Accuracy Evaluation Portal*
+> *UK Day-Ahead Wind Generation Decision & Forecast Accuracy Evaluation Portal*  
+> **GitHub Repository:** [https://github.com/Abhishekchoudhary9622/WindLedger](https://github.com/Abhishekchoudhary9622/WindLedger)
 
 ---
 
 ## 🤖 1. AI Tools Disclosure
-In full accordance with submission guidelines:
+In full accordance with project guidelines:
 * **AI Tools Utilized:** This project was developed with assistance from **Google Antigravity AI coding assistant**, powered by **Google DeepMind Gemini 3.8 / Claude models**.
 * **Scope of AI Assistance:** AI tools were used for domain research on GB BSC settlement rules, codebase architecture and refactoring, vectorization of statistical computations, test suite generation, and technical documentation drafting.
 * **Human Verification:** All mathematical formulas (MAE, RMSE, nMAE, P10–P90 quantiles, cashout imbalance equations), data ingestion schemas, and test suites have been verified and validated.
 
 ---
 
-## 🔗 2. Live Application & API Links
+## 🏗️ 2. System Architecture Diagram
+
+```mermaid
+flowchart TB
+    subgraph DataSources["External Data Feeds (Elexon BMRS API)"]
+        BMRS_ACT["FUELHH Stream<br/>(Half-Hourly Actual Wind Generation)"]
+        BMRS_FC["WINDFOR Stream<br/>(Rolling Multi-Vintage Forecasts)"]
+    end
+
+    subgraph StorageLayer["Data & Persistence Layer"]
+        INGEST["Ingestion Pipeline<br/>(ingest.py)"]
+        PARQUET_ACT[("actuals.parquet<br/>1,585 Records")]
+        PARQUET_FC[("forecasts.parquet<br/>21,024 Records")]
+        STORE["Singleton Data Store<br/>(data_store.py)"]
+    end
+
+    subgraph ComputeLayer["FastAPI Analytical Compute Engine (Python 3.11)"]
+        subgraph Services["Core Compute Kernels"]
+            DECISION["Decision Forecast Engine<br/>• Cutoff Simulation (09:20 / 10:00)<br/>• P10/P90 Uncertainty Corridor<br/>• Conservative Hedging Bound"]
+            METRICS["Vectorized Metrics Engine<br/>• MAE / RMSE / Bias / nMAE%<br/>• Horizon Decay (14h - 38h)<br/>• 31x24 Error Heatmap Matrix"]
+            TRADING["Trading & Risk Engine<br/>• Balancing Cashout (SBP/SSP)<br/>• 3-Tier Bidding Strategy<br/>• Stress-Test Simulator"]
+            RAMPS["Ramp Analytics Engine<br/>• Swing Detection (>800 MW/hr)<br/>• Capture Rate Tracking"]
+        end
+
+        subgraph Cache["In-Memory Multi-Tier Cache"]
+            L1["Pre-Warmed LRU Cache<br/>(Sub-Millisecond Response <0.4ms)"]
+        end
+
+        subgraph Routers["FastAPI Route Handlers"]
+            R_FC["/api/decision<br/>/api/evolution"]
+            R_ACC["/api/accuracy/*<br/>(summary, horizon, heatmap)"]
+            R_TRADE["/api/trading/*<br/>(imbalance, bid-recommendation)"]
+            R_RAMP["/api/ramps/events"]
+            R_DATA["/api/data/*<br/>(summary, CSV export)"]
+            R_SYS["/api/system/*<br/>(health, benchmarks)"]
+            R_DOCS["/docs (Custom UI)<br/>/swagger (OpenAPI)"]
+        end
+    end
+
+    subgraph Frontend["React 19 + TypeScript Presentation Layer"]
+        subgraph ClientFeatures["Interactive Modules"]
+            NAV["Pill Navigation<br/>+ Route Handlers"]
+            DASH["Dashboard<br/>• Macro KPIs & Area Charts<br/>• Vintage Stepper Explorer"]
+            FC_EXP["Forecast Explorer<br/>• Spaghetti Revision Plots<br/>• Publication Audit Log"]
+            ANALYTICS["Analytics Lab<br/>• Lead Time Decay Curve<br/>• 31x24 Error Heatmap"]
+            DATA_EXP["Data Explorer<br/>• Filterable Grid & CSV Export"]
+            API_REF["API Reference Portal<br/>• Live Query Playground"]
+            SEARCH["Global Search & Cmd Palette<br/>(Ctrl+K / Cmd+K)"]
+            NOTIF["Trading Alert Center<br/>• High Cashout Risk Warnings<br/>• Ramp Detection Alerts"]
+        end
+    end
+
+    %% Data Flow Connections
+    BMRS_ACT --> INGEST
+    BMRS_FC --> INGEST
+    INGEST --> PARQUET_ACT
+    INGEST --> PARQUET_FC
+    PARQUET_ACT --> STORE
+    PARQUET_FC --> STORE
+    STORE --> Services
+
+    Services <--> L1
+    Services --> Routers
+
+    Routers --> Frontend
+    SEARCH --> ClientFeatures
+    NOTIF --> ClientFeatures
+```
+
+---
+
+## 🔗 3. Live Application & API Links
 
 | Service | Platform | Link | Description |
 | :--- | :--- | :--- | :--- |
@@ -24,7 +96,7 @@ In full accordance with submission guidelines:
 
 ---
 
-## 🛠️ 3. Technology Stack
+## 🛠️ 4. Technology Stack
 
 * **Frontend**: **React 19**, **TypeScript**, **Vite**, **TanStack React Query v5**, **Recharts v3**, **Framer Motion**, Custom Vanilla CSS Design System.
 * **Backend**: **Python 3.11+**, **FastAPI**, **Pandas**, **NumPy**, **PyArrow**, **Uvicorn**, **pytest**, **httpx**.
@@ -33,7 +105,7 @@ In full accordance with submission guidelines:
 
 ---
 
-## 📂 4. Repository Files and Directories
+## 📂 5. Repository Files and Directories
 
 ```text
 WindLens/ (Repo ID: kjhwr)
@@ -127,7 +199,7 @@ WindLens/ (Repo ID: kjhwr)
 
 ---
 
-## 🚀 5. How to Start the Application
+## 🚀 6. How to Start the Application
 
 ### Option A: Using Docker Compose (Recommended - Single Command)
 Runs both the Python FastAPI backend and the React Nginx frontend in isolated containers:
@@ -193,7 +265,7 @@ npm run dev
 
 ---
 
-## 🧪 6. Testing & Quality Assurance
+## 🧪 7. Testing & Quality Assurance
 
 The application includes an automated test suite verifying data integrity, cutoff adherence, mathematical formulas, and endpoint responses:
 
@@ -212,7 +284,7 @@ python -m pytest -v
 
 ---
 
-## 📊 7. Official Elexon BMRS Datasets Implemented
+## 📊 8. Official Elexon BMRS Datasets Implemented
 
 The platform directly ingests and evaluates the two official Elexon BMRS streams:
 
@@ -228,7 +300,7 @@ The platform directly ingests and evaluates the two official Elexon BMRS streams
 
 ---
 
-## ☁️ 8. Cloud Deployment Guide
+## ☁️ 9. Cloud Deployment Guide
 
 ### Deploy Frontend to Vercel
 1. Import the repository into [Vercel](https://vercel.com).
@@ -246,5 +318,5 @@ The platform directly ingests and evaluates the two official Elexon BMRS streams
 
 ---
 
-## 📄 9. License
+## 📄 10. License
 MIT License. Built for UK power utility day-ahead trading and quantitative risk teams.
