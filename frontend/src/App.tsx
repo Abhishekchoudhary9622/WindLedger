@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
@@ -6,6 +7,9 @@ import Analytics from './pages/Analytics';
 import DataExplorer from './pages/DataExplorer';
 import Settings from './pages/Settings';
 import ApiReference from './pages/ApiReference';
+import SearchModal from './components/SearchModal';
+import NotificationPopover from './components/NotificationPopover';
+import ProfileDropdown from './components/ProfileDropdown';
 import './index.css';
 
 const queryClient = new QueryClient({
@@ -26,6 +30,11 @@ function WindTurbineBrandLogo() {
 }
 
 export default function App() {
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(3);
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
@@ -126,27 +135,57 @@ export default function App() {
 
             {/* Right: User & Actions */}
             <div className="header-actions">
-              <button className="icon-btn" title="Search platform" aria-label="Search">
+              {/* Search Button */}
+              <button
+                className="icon-btn"
+                title="Search platform (Ctrl+K)"
+                aria-label="Search"
+                onClick={() => setIsSearchOpen(true)}
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8" />
                   <line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
               </button>
 
-              <button className="icon-btn" title="Notifications" aria-label="Notifications">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                </svg>
-                <span className="badge-dot" />
-              </button>
+              {/* Notifications Popover Container */}
+              <div style={{ position: 'relative' }}>
+                <button
+                  className="icon-btn"
+                  title="Notifications"
+                  aria-label="Notifications"
+                  onClick={() => setIsNotifOpen(prev => !prev)}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                  </svg>
+                  {unreadCount > 0 && <span className="badge-dot" />}
+                </button>
+                <NotificationPopover
+                  isOpen={isNotifOpen}
+                  onClose={() => setIsNotifOpen(false)}
+                  onUnreadCountChange={setUnreadCount}
+                />
+              </div>
 
-              <div className="user-profile-btn">
-                <span className="user-avatar-circle">T</span>
-                <span>Trading Team</span>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
+              {/* User Profile Container */}
+              <div style={{ position: 'relative' }}>
+                <div
+                  className="user-profile-btn"
+                  onClick={() => setIsProfileOpen(prev => !prev)}
+                  title="Trading Desk Account"
+                >
+                  <span className="user-avatar-circle">T</span>
+                  <span>Trading Team</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </div>
+                <ProfileDropdown
+                  isOpen={isProfileOpen}
+                  onClose={() => setIsProfileOpen(false)}
+                />
               </div>
             </div>
           </header>
@@ -168,6 +207,12 @@ export default function App() {
               <Route path="/methodology" element={<Settings />} />
             </Routes>
           </main>
+
+          {/* ── Global Search Modal / Command Palette ─────────────────── */}
+          <SearchModal
+            isOpen={isSearchOpen}
+            onClose={() => setIsSearchOpen(false)}
+          />
         </div>
       </BrowserRouter>
     </QueryClientProvider>
