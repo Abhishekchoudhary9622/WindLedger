@@ -230,6 +230,7 @@ def get_forecast_evolution(
     versions = []
     for _, row in fc.iterrows():
         horizon = (target - row["publishTime"]).total_seconds() / 3600
+        is_post = bool(row["publishTime"] > cutoff)
         versions.append({
             "publishTime": row["publishTime"].isoformat().replace("+00:00", "Z"),
             "forecastMW": row["generation"],
@@ -239,11 +240,13 @@ def get_forecast_evolution(
                 if selected_publish is not None
                 else False
             ),
+            "isPostCutoff": is_post,
         })
 
     result = {
         "targetTime": target.isoformat().replace("+00:00", "Z"),
         "actualMW": round(actual_mw, 0) if actual_mw is not None else None,
+        "decisionCutoff": cutoff.isoformat().replace("+00:00", "Z"),
         "versions": versions,
     }
     _evolution_cache[cache_key] = result

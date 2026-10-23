@@ -61,11 +61,11 @@ export default function ProfileDropdown({ isOpen, onClose }: ProfileDropdownProp
           fontWeight: 700,
           fontSize: '15px'
         }}>
-          T
+          D
         </div>
         <div>
-          <div style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>Trading Desk Team</div>
-          <div style={{ fontSize: '12px', color: '#64748b' }}>GB Power Utilities — London</div>
+          <div style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>Evaluator / Demo Session</div>
+          <div style={{ fontSize: '12px', color: '#64748b' }}>Read-Only Evaluation Desk</div>
         </div>
       </div>
 
@@ -73,7 +73,7 @@ export default function ProfileDropdown({ isOpen, onClose }: ProfileDropdownProp
       <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px' }}>
           <span style={{ color: '#64748b' }}>Active Gate Closure:</span>
-          <span style={{ fontWeight: 700, color: '#059669' }}>09:20 EPEX SPOT</span>
+          <span style={{ fontWeight: 700, color: '#059669' }}>09:20 EPEX SPOT (UK Time)</span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '6px' }}>
           <span style={{ color: '#64748b' }}>Data Source:</span>
@@ -88,7 +88,7 @@ export default function ProfileDropdown({ isOpen, onClose }: ProfileDropdownProp
       {/* Quick Menu Options */}
       <div style={{ padding: '6px' }}>
         <button
-          onClick={() => { onClose(); navigate('/settings'); }}
+          onClick={() => { onClose(); navigate('/method'); }}
           style={{
             width: '100%',
             textAlign: 'left',
@@ -107,7 +107,7 @@ export default function ProfileDropdown({ isOpen, onClose }: ProfileDropdownProp
           onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#f1f5f9')}
           onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
         >
-          ⚙️ Market Cutoff Settings
+          📖 Methodology & Dataset Scope
         </button>
 
         <button

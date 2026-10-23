@@ -118,12 +118,14 @@ class EvolutionVersion(BaseModel):
     forecast_mw: float = Field(..., alias="forecastMW")
     horizon_hours: float = Field(..., alias="horizonHours")
     is_selected: bool = Field(False, alias="isSelected")
+    is_post_cutoff: bool = Field(False, alias="isPostCutoff")
     model_config = {"populate_by_name": True}
 
 
 class EvolutionResponse(BaseModel):
     target_time: datetime = Field(..., alias="targetTime")
     actual_mw: Optional[float] = Field(None, alias="actualMW")
+    decision_cutoff: Optional[datetime] = Field(None, alias="decisionCutoff")
     versions: list[EvolutionVersion]
     model_config = {"populate_by_name": True}
 

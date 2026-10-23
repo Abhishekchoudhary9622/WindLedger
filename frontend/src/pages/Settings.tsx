@@ -8,9 +8,9 @@ export default function Settings() {
     <div style={{ maxWidth: 1080, margin: '0 auto' }}>
       <div className="page-header-row">
         <div>
-          <h1 className="page-title">Dataset Integration & Documentation</h1>
+          <h1 className="page-title">Methodology & Dataset Scope</h1>
           <p className="page-subtitle">
-            Elexon BMRS API connections, trading cutoff rules, and January 2026 dataset scope
+            Elexon BMRS data integration, trading gate closures, hourly aggregation, and error metric definitions
           </p>
         </div>
       </div>
@@ -20,8 +20,8 @@ export default function Settings() {
         <div className="dashboard-card">
           <div className="card-top-header">
             <div>
-              <div className="card-heading-title">📡 Official Elexon BMRS Datasets Implemented</div>
-              <div className="card-heading-subtitle">Direct ingestion from the two official Elexon Insights stream endpoints</div>
+              <div className="card-heading-title">Official Elexon BMRS Datasets Implemented</div>
+              <div className="card-heading-subtitle">Ingestion from the two official Elexon Insights stream endpoints</div>
             </div>
             <div className="pill-selected-green">100% Ingested & Active</div>
           </div>
@@ -31,17 +31,17 @@ export default function Settings() {
             <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 10, padding: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                 <span style={{ fontWeight: 700, color: '#059669', fontSize: '0.95rem' }}>
-                  2.1 Actual Generation (FUELHH)
+                  Actual Generation (FUELHH)
                 </span>
                 <span className="pill-selected-green" style={{ fontSize: '0.7rem', padding: '2px 8px' }}>
                   {meta?.actualCount ? `${meta.actualCount.toLocaleString()} rows` : '1,585 rows'}
                 </span>
               </div>
               <p style={{ fontSize: '0.8rem', color: '#64748B', lineHeight: 1.6, marginBottom: 10 }}>
-                Actual wind generation in Great Britain, filtered strictly to <code>fuelType = "WIND"</code>. Resolution: 30-minute half-hourly intervals.
+                Actual wind generation in Great Britain, filtered strictly to <code>fuelType = "WIND"</code>. Native resolution: 30-minute settlement periods (48 periods/day, 1,488 in January).
               </p>
               <div style={{ fontSize: '0.78rem', color: '#334155', marginBottom: 8 }}>
-                <strong>Key fields:</strong> <code>startTime</code> (target delivery time), <code>generation</code> (outturn MW), <code>fuelType</code>.
+                <strong>Key fields:</strong> <code>startTime</code> (delivery interval), <code>settlementDate</code>, <code>settlementPeriod</code>, <code>generation</code> (outturn MW), <code>fuelType</code>.
               </div>
               <a
                 href="https://bmrs.elexon.co.uk/api-documentation/endpoint/datasets/FUELHH/stream"
@@ -57,17 +57,17 @@ export default function Settings() {
             <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 10, padding: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                 <span style={{ fontWeight: 700, color: '#2563EB', fontSize: '0.95rem' }}>
-                  2.2 Forecasted Generation (WINDFOR)
+                  Forecasted Generation (WINDFOR)
                 </span>
                 <span className="pill-selected-green" style={{ fontSize: '0.7rem', padding: '2px 8px' }}>
                   {meta?.forecastCount ? `${meta.forecastCount.toLocaleString()} rows` : '21,024 rows'}
                 </span>
               </div>
               <p style={{ fontSize: '0.8rem', color: '#64748B', lineHeight: 1.6, marginBottom: 10 }}>
-                National wind generation forecasts published at multiple lead times. Multiple runs exist per target hour to show forecast evolution.
+                National wind generation forecasts published at multiple lead times. Native resolution: 60-minute hourly intervals (24 intervals/day, 744 in January).
               </p>
               <div style={{ fontSize: '0.78rem', color: '#334155', marginBottom: 8 }}>
-                <strong>Key fields:</strong> <code>startTime</code> (delivery target), <code>publishTime</code> (when forecast was created), <code>generation</code> (forecast MW).
+                <strong>Key fields:</strong> <code>startTime</code> (delivery hour), <code>publishTime</code> (publication timestamp), <code>generation</code> (forecast MW).
               </div>
               <a
                 href="https://bmrs.elexon.co.uk/api-documentation/endpoint/datasets/WINDFOR/stream"
@@ -81,60 +81,96 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* Why January 2026? Section */}
+        {/* Temporal Alignment & Aggregation Method */}
         <div className="dashboard-card">
           <div className="card-top-header">
             <div>
-              <div className="card-heading-title">📅 Why January 2026? (Dataset Date Scope)</div>
-              <div className="card-heading-subtitle">Explanation of the benchmark period specified in the problem requirement</div>
+              <div className="card-heading-title">Temporal Alignment & Hourly Aggregation</div>
+              <div className="card-heading-subtitle">Harmonizing 30-minute settlement actuals with 60-minute forecast intervals</div>
             </div>
           </div>
 
           <div style={{ color: '#475569', fontSize: '0.875rem', lineHeight: 1.7, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             <p>
-              The challenge brief explicitly specified: <strong style={{ color: '#0F172A' }}>“Please consider data relevant only for purchase decisions to be made in January 2026.”</strong>
+              In Great Britain, electricity settlement operates on <strong>30-minute settlement periods</strong> (48 periods per day, totaling 1,488 periods across January). However, the National Grid ESO wind forecast (<strong>WINDFOR</strong>) is published on an <strong>hourly resolution</strong> (744 hours across January).
             </p>
-            <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10, padding: '14px', fontSize: '0.825rem', color: '#166534' }}>
-              <strong>Trading Mechanism:</strong> In wholesale electricity day-ahead markets, trading desks make power purchase decisions on day <strong style={{ color: '#0F172A' }}>D-1</strong> to cover consumer demand during delivery day <strong style={{ color: '#0F172A' }}>D</strong>. Therefore:
+            <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 10, padding: '14px', fontSize: '0.825rem' }}>
+              <strong>Aggregation Logic:</strong> To evaluate forecasts without temporal distortion, each hour's two 30-minute FUELHH outturn records (e.g. 00:00–00:30 and 00:30–01:00) are averaged to form the ground-truth hourly delivery outturn. This produces exactly <strong>744 hourly delivery periods</strong> matching 100% of January 2026.
+            </div>
+          </div>
+        </div>
+
+        {/* Why the Forecast Bias (+1,852 MW) Exists */}
+        <div className="dashboard-card">
+          <div className="card-top-header">
+            <div>
+              <div className="card-heading-title">Understanding Bias & Error Magnitude</div>
+              <div className="card-heading-subtitle">Verified math from raw Elexon datasets and structural domain drivers</div>
+            </div>
+          </div>
+
+          <div style={{ color: '#475569', fontSize: '0.875rem', lineHeight: 1.7, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <p>
+              When evaluating the January 2026 day-ahead decision forecast against metered outturn, the overall statistics are:
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
+              <div style={{ background: '#F8FAFC', padding: '10px 14px', borderRadius: 8, border: '1px solid #E2E8F0' }}>
+                <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Mean Forecast</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#2563EB' }}>13,433 MW</div>
+              </div>
+              <div style={{ background: '#F8FAFC', padding: '10px 14px', borderRadius: 8, border: '1px solid #E2E8F0' }}>
+                <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Mean Actual</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#059669' }}>11,581 MW</div>
+              </div>
+              <div style={{ background: '#F8FAFC', padding: '10px 14px', borderRadius: 8, border: '1px solid #E2E8F0' }}>
+                <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Net Bias</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#EF4444' }}>+1,852 MW</div>
+              </div>
+              <div style={{ background: '#F8FAFC', padding: '10px 14px', borderRadius: 8, border: '1px solid #E2E8F0' }}>
+                <div style={{ fontSize: '0.75rem', color: '#64748B' }}>MAE / nMAE</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0F172A' }}>2,142 MW (18.5%)</div>
+              </div>
+            </div>
+            <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 10, padding: '14px', fontSize: '0.825rem', color: '#92400E' }}>
+              <strong>Domain Drivers:</strong>
               <ul style={{ margin: '6px 0 0 16px', lineHeight: 1.6 }}>
-                <li>A purchase decision made on <strong>1 January 2026</strong> delivers electricity on <strong>1 January 2026</strong>.</li>
-                <li>A purchase decision made on <strong>31 January 2026</strong> delivers electricity on <strong>1 February 2026</strong>.</li>
-                <li>To evaluate historical uncertainty bands without look-ahead bias, forecasts from late December 2025 are ingested as a pre-buffer.</li>
-                <li>All timestamps are evaluated in <strong>UTC (GMT)</strong>, the standard operating timezone of the UK national grid.</li>
+                <li><strong>Transmission vs. Embedded Generation:</strong> Standard BMRS FUELHH outturn captures BM-registered operational metering on the high-voltage transmission system. Smaller embedded wind farms connected to distribution networks are not captured in FUELHH wind totals, while WINDFOR forecasts national expected output.</li>
+                <li><strong>Storm Curtailment & High Wind Cut-Out:</strong> January 2026 experienced severe Atlantic windstorms (e.g. Storm Gorel) where turbines were commercially curtailed in the Balancing Mechanism or shut down due to high-wind cut-out thresholds.</li>
+                <li><strong>Reproducibility:</strong> Run <code>python scripts/verify_metrics.py</code> in the backend directory to verify all calculations directly from raw Parquet files.</li>
               </ul>
             </div>
           </div>
         </div>
 
-        {/* Market Handbook & Trading Rules */}
+        {/* Market Gate Closures & Trading Rules */}
         <div className="dashboard-card">
           <div className="card-top-header">
             <div>
-              <div className="card-heading-title">📘 GB Day-Ahead Trading Decision Rules</div>
-              <div className="card-heading-subtitle">Why precision at the decision cutoff determines utility profit & loss</div>
+              <div className="card-heading-title">GB Day-Ahead Market Gate Closures</div>
+              <div className="card-heading-subtitle">Confirmed auction timings in UK time (same as UTC in January)</div>
             </div>
           </div>
 
           <div style={{ color: '#475569', fontSize: '0.875rem', lineHeight: 1.7, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
               <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 10, padding: '14px' }}>
-                <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>Zero Lookahead Bias</div>
+                <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>EPEX SPOT GB Day-Ahead</div>
                 <div style={{ fontSize: '0.8rem', color: '#64748B' }}>
-                  WindLedger strictly selects the latest forecast with <code>publishTime ≤ cutoff</code>. Forecasts published after gate closure are excluded from evaluation.
+                  Order book closes daily at <strong>09:20 UK time (same as UTC in January)</strong>. Results published from 09:30.
                 </div>
               </div>
 
               <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 10, padding: '14px' }}>
-                <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>Balancing Cashout Risk</div>
+                <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>Nord Pool N2EX Day-Ahead</div>
                 <div style={{ fontSize: '0.8rem', color: '#64748B' }}>
-                  Under-forecast errors create surplus wind sold at low spill rates; over-forecast errors force expensive thermal purchases in the Balancing Mechanism.
+                  Order book closes daily at <strong>09:50 UK time (same as UTC in January)</strong>. Auction results published by 10:00.
                 </div>
               </div>
 
               <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 10, padding: '14px' }}>
-                <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>Sub-Millisecond Engine</div>
+                <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>Illustrative Scenario Features</div>
                 <div style={{ fontSize: '0.8rem', color: '#64748B' }}>
-                  Vectorized PyArrow columnar queries and pre-warmed memory caches deliver point-in-time forecasts and error distributions in <strong>&lt; 5ms</strong>.
+                  Financial cashout (SBP/SSP) penalties and bid recommendation features use illustrative pricing assumptions and are provided as optional exploration beyond the core Elexon outturn data.
                 </div>
               </div>
             </div>

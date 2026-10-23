@@ -81,3 +81,20 @@ export function formatUtcPublish(input: string | Date | null | undefined): strin
   const mm = String(d.getUTCMinutes()).padStart(2, '0');
   return `${dd} ${mon} ${hh}:${mm}`;
 }
+
+export function getDecisionDate(deliveryDateStr: string | null | undefined): string {
+  const d = parseAsUtc(deliveryDateStr);
+  if (!d) return '—';
+  const dec = new Date(d.getTime() - 24 * 3600 * 1000);
+  const dd = String(dec.getUTCDate()).padStart(2, '0');
+  const mon = MONTHS_SHORT[dec.getUTCMonth()];
+  const yyyy = dec.getUTCFullYear();
+  return `${dd} ${mon} ${yyyy}`;
+}
+
+export function formatDecisionCutoffLabel(deliveryDateStr: string | null | undefined, cutoffTime: string): string {
+  const decDateStr = getDecisionDate(deliveryDateStr);
+  const delDateStr = formatUtcDate(deliveryDateStr);
+  return `Decision cutoff: ${decDateStr} ${cutoffTime} UTC (D-1) for Delivery Day: ${delDateStr}`;
+}
+

@@ -2,7 +2,8 @@ import { useState } from 'react';
 
 export default function ApiReference() {
   const [copied, setCopied] = useState(false);
-  const docsUrl = 'http://127.0.0.1:8000/docs';
+  const backendBase = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+  const docsUrl = `${backendBase.replace(/\/$/, '')}/docs`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(docsUrl);

@@ -92,9 +92,9 @@ export default function DataExplorer() {
           <div className="filter-pill-btn">
             <span style={{ color: '#64748B', fontSize: '0.8rem' }}>Cutoff:</span>
             <select value={cutoff} onChange={e => setCutoff(e.target.value)}>
-              <option value="09:20">09:20 (EPEX Day-Ahead)</option>
-              <option value="10:00">10:00 (Standard Cutoff)</option>
-              <option value="11:00">11:00 (Nord Pool)</option>
+              <option value="09:20">09:20 (EPEX Day-Ahead - UK time / UTC)</option>
+              <option value="09:50">09:50 (Nord Pool Day-Ahead - UK time / UTC)</option>
+              <option value="10:00">10:00 (Post-Auction Benchmark)</option>
               <option value="12:00">12:00 (Noon)</option>
             </select>
           </div>

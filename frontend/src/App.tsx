@@ -108,14 +108,15 @@ export default function App() {
                 </li>
                 <li>
                   <NavLink
-                    to="/settings"
+                    to="/method"
                     className={({ isActive }) => `nav-pill-link ${isActive ? 'active' : ''}`}
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="3" />
-                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
+                      <path d="M6 6h10" />
+                      <path d="M6 10h10" />
                     </svg>
-                    Settings
+                    Method
                   </NavLink>
                 </li>
                 <li>
@@ -174,10 +175,10 @@ export default function App() {
                 <div
                   className="user-profile-btn"
                   onClick={() => setIsProfileOpen(prev => !prev)}
-                  title="Trading Desk Account"
+                  title="Evaluation / Demo Mode"
                 >
-                  <span className="user-avatar-circle">T</span>
-                  <span>Trading Team</span>
+                  <span className="user-avatar-circle" style={{ background: '#059669' }}>D</span>
+                  <span>Demo Mode</span>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="6 9 12 15 18 9" />
                   </svg>
@@ -197,6 +198,7 @@ export default function App() {
               <Route path="/forecast-explorer" element={<ForecastExplorer />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/data-explorer" element={<DataExplorer />} />
+              <Route path="/method" element={<Settings />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/api-reference" element={<ApiReference />} />
               <Route path="/docs" element={<ApiReference />} />

@@ -1003,33 +1003,17 @@ DOCS_HTML = r"""<!DOCTYPE html>
             <span class="dot-pulse"></span>
             Operational
           </div>
-          <span class="uptime-label">Uptime <strong>99.98%</strong></span>
+          <span class="uptime-label">Engine <strong>FastAPI</strong></span>
         </div>
-        <div class="status-sub">All systems running normally.</div>
-        <div class="sparkline-row">
-          <div class="spark-bar" style="height: 60%"></div>
-          <div class="spark-bar" style="height: 85%"></div>
-          <div class="spark-bar" style="height: 75%"></div>
-          <div class="spark-bar" style="height: 90%"></div>
-          <div class="spark-bar" style="height: 100%"></div>
-          <div class="spark-bar" style="height: 65%"></div>
-          <div class="spark-bar" style="height: 95%"></div>
-          <div class="spark-bar" style="height: 80%"></div>
-          <div class="spark-bar" style="height: 100%"></div>
-          <div class="spark-bar" style="height: 90%"></div>
-          <div class="spark-bar" style="height: 85%"></div>
-          <div class="spark-bar" style="height: 100%"></div>
-          <div class="spark-bar" style="height: 95%"></div>
-          <div class="spark-bar" style="height: 100%"></div>
-        </div>
+        <div class="status-sub">In-memory columnar Parquet data engine active.</div>
       </div>
 
       <!-- Base URL Card -->
       <div class="side-card">
         <h3>Base URL</h3>
         <div class="base-url-box">
-          <span id="base-url-val">http://127.0.0.1:8000</span>
-          <button class="btn-icon-copy" onclick="copyText('http://127.0.0.1:8000')" title="Copy Base URL">
+          <span id="base-url-val">/</span>
+          <button class="btn-icon-copy" id="btn-copy-base" onclick="copyCurrentBaseUrl()" title="Copy Base URL">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
           </button>
         </div>
@@ -1115,12 +1099,20 @@ print(res.json())</code></pre>
       card.classList.toggle('open');
     }
 
+    const origin = window.location.origin;
+    const baseBox = document.getElementById('base-url-val');
+    if (baseBox) baseBox.innerText = origin;
+
+    function copyCurrentBaseUrl() {
+      copyText(window.location.origin);
+    }
+
     // Switch Quick Start code snippets
     const snippets = {
       python: `# pip install requests
 import requests
 
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "${window.location.origin}"
 params = {
     "date": "2026-01-14",
     "cutoff": "09:20"
@@ -1130,9 +1122,9 @@ res = requests.get(
     params=params
 )
 print(res.json())`,
-      curl: `curl -X GET "http://127.0.0.1:8000/api/decision?date=2026-01-14&cutoff=09:20" \\
+      curl: `curl -X GET "${window.location.origin}/api/decision?date=2026-01-14&cutoff=09:20" \\
   -H "Accept: application/json"`,
-      javascript: `const BASE_URL = "http://127.0.0.1:8000";
+      javascript: `const BASE_URL = "${window.location.origin}";
 const res = await fetch(\`\${BASE_URL}/api/decision?date=2026-01-14&cutoff=09:20\`);
 const data = await res.json();
 console.log(data);`

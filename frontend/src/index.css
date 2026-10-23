@@ -659,6 +659,16 @@ body {
   box-shadow: 0 0 0 2px #BBF7D0;
 }
 
+.vintage-item.vintage-post-cutoff {
+  opacity: 0.6;
+  background: #F8FAFC;
+}
+
+.vintage-item.vintage-post-cutoff::before {
+  background: #CBD5E1;
+  box-shadow: none;
+}
+
 .vintage-left-meta {
   display: flex;
   flex-direction: column;

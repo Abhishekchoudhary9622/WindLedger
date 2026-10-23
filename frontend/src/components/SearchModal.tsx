@@ -47,7 +47,7 @@ const SEARCH_DATABASE: SearchItem[] = [
   {
     id: 'page-data',
     title: 'Data Explorer & CSV Export',
-    subtitle: 'Tabular view of all 744 settlement hours with one-click dataset download',
+    subtitle: 'Tabular view of all 744 hourly delivery intervals with one-click dataset download',
     category: 'Page',
     badge: 'View',
     badgeColor: '#3b82f6',
@@ -55,14 +55,14 @@ const SEARCH_DATABASE: SearchItem[] = [
     keywords: ['data', 'table', 'csv', 'export', 'download', 'raw', 'records', 'parquet']
   },
   {
-    id: 'page-settings',
-    title: 'Trading Settings & Market Handbook',
-    subtitle: 'Cutoff time presets (09:20 EPEX / 10:00 Nord Pool) and Elexon BMRS ingestion schema',
+    id: 'page-method',
+    title: 'Methodology & Dataset Scope',
+    subtitle: 'Cutoff time presets (09:20 EPEX / 09:50 Nord Pool) and Elexon BMRS ingestion schema',
     category: 'Page',
     badge: 'View',
     badgeColor: '#3b82f6',
-    path: '/settings',
-    keywords: ['settings', 'config', 'cutoff', 'epex', 'nord pool', 'bmrs', 'rules', 'elexon']
+    path: '/method',
+    keywords: ['method', 'methodology', 'config', 'cutoff', 'epex', 'nord pool', 'bmrs', 'rules', 'elexon']
   },
   {
     id: 'page-docs',
@@ -131,7 +131,7 @@ const SEARCH_DATABASE: SearchItem[] = [
   {
     id: 'metric-mae',
     title: 'Mean Absolute Error (MAE: 2,142 MW)',
-    subtitle: 'Expected absolute forecast miss across all 744 settlement hours at 09:20 cutoff',
+    subtitle: 'Expected absolute forecast miss across all 744 hourly delivery periods at 09:20 cutoff',
     category: 'Metric',
     badge: 'KPI',
     badgeColor: '#10b981',

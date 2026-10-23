@@ -29,6 +29,7 @@ import {
   formatUtcDate,
   formatUtcDateTime,
   formatUtcTime,
+  formatDecisionCutoffLabel,
 } from '../utils/formatDate';
 
 /* ── Wind Turbine Icon ─────────────────────────────────────────────────── */
@@ -67,6 +68,24 @@ function CustomMainTooltip({ active, payload, label }: any) {
             <span>Forecast</span>
           </div>
           <span className="tooltip-val">{Math.round(p.forecast).toLocaleString()} MW</span>
+        </div>
+      )}
+      {p?.bandP10 != null && p?.bandP90 != null && (
+        <div className="tooltip-data-row">
+          <div className="tooltip-label-group">
+            <span className="tooltip-dot" style={{ background: '#60A5FA' }} />
+            <span>P10–P90 Band</span>
+          </div>
+          <span className="tooltip-val">{Math.round(p.bandP10).toLocaleString()} – {Math.round(p.bandP90).toLocaleString()} MW</span>
+        </div>
+      )}
+      {p?.conservative != null && (
+        <div className="tooltip-data-row">
+          <div className="tooltip-label-group">
+            <span className="tooltip-dot" style={{ background: '#D97706' }} />
+            <span>Conservative</span>
+          </div>
+          <span className="tooltip-val">{Math.round(p.conservative).toLocaleString()} MW</span>
         </div>
       )}
       {p?.error != null && (
@@ -144,6 +163,10 @@ export default function Dashboard() {
         forecast: p.forecastMW,
         error: p.errorMW,
         publishTime: `${formatUtcDateTime(p.publishTime)} UTC`,
+        bandP10: p.bandP10,
+        bandP90: p.bandP90,
+        bandRange: p.bandP10 != null && p.bandP90 != null ? [p.bandP10, p.bandP90] : null,
+        conservative: p.conservativeMW,
       };
     });
   }, [decisionData]);
@@ -236,7 +259,7 @@ export default function Dashboard() {
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="18 15 12 9 6 15" />
               </svg>
-              744 settlement periods
+              744 delivery hours (1,488 half-hours)
             </span>
           </div>
         </div>
@@ -317,7 +340,7 @@ export default function Dashboard() {
               <div>
                 <div className="card-heading-title">Wind generation – actual vs forecast</div>
                 <div className="card-heading-subtitle">
-                  Showing latest forecast available before {cutoffTime} on {formattedDate} (UTC)
+                  {formatDecisionCutoffLabel(deliveryDate, cutoffTime)}
                 </div>
               </div>
             </div>
@@ -355,11 +378,11 @@ export default function Dashboard() {
                   onChange={e => setCutoffTime(e.target.value)}
                   title="Decision cutoff"
                 >
-                  <option value="09:20">09:20 (EPEX Day-Ahead)</option>
-                  <option value="10:00">10:00 (Standard Cutoff)</option>
-                  <option value="11:00">11:00 (Nord Pool)</option>
-                  <option value="12:00">12:00 (Noon)</option>
-                  <option value="15:00">15:00 (Afternoon)</option>
+                  <option value="09:20">09:20 (EPEX Day-Ahead - UK time / UTC)</option>
+                  <option value="09:50">09:50 (Nord Pool Day-Ahead - UK time / UTC)</option>
+                  <option value="10:00">10:00 (Post-Auction Benchmark)</option>
+                  <option value="12:00">12:00 (Noon Update)</option>
+                  <option value="15:00">15:00 (Intraday Update)</option>
                 </select>
               </div>
 
@@ -370,7 +393,7 @@ export default function Dashboard() {
           </div>
 
           {/* Main Chart */}
-          <div style={{ width: '100%', height: 320 }}>
+          <div style={{ width: '100%', height: 350, flex: 1, minHeight: 320 }}>
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart
                 data={chartPoints}
@@ -421,6 +444,16 @@ export default function Dashboard() {
                   strokeDasharray="3 3"
                   strokeWidth={1.5}
                 />
+                {/* P10-P90 Uncertainty Band */}
+                <Area
+                  type="monotone"
+                  dataKey="bandRange"
+                  fill="#93C5FD"
+                  stroke="#60A5FA"
+                  strokeDasharray="3 3"
+                  fillOpacity={0.25}
+                  name="P10–P90 uncertainty band"
+                />
                 {/* Actual Area + Line (Green) */}
                 <Area
                   type="monotone"
@@ -440,12 +473,22 @@ export default function Dashboard() {
                   dot={false}
                   name="Forecast (latest before cutoff)"
                 />
+                {/* Conservative Line (Amber Dashed) */}
+                <Line
+                  type="monotone"
+                  dataKey="conservative"
+                  stroke="#D97706"
+                  strokeWidth={1.8}
+                  strokeDasharray="3 3"
+                  dot={false}
+                  name="Conservative line"
+                />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
 
           {/* Bottom Chart Legend */}
-          <div className="chart-bottom-legend">
+          <div className="chart-bottom-legend" style={{ flexWrap: 'wrap', gap: '1.25rem', marginTop: '0.75rem' }}>
             <div className="legend-item">
               <span className="legend-dot-solid" />
               <span>Actual generation</span>
@@ -453,6 +496,14 @@ export default function Dashboard() {
             <div className="legend-item">
               <span className="legend-line-dashed" />
               <span>Forecast (latest before cutoff)</span>
+            </div>
+            <div className="legend-item">
+              <span style={{ width: 14, height: 10, background: '#93C5FD', opacity: 0.6, borderRadius: 2, display: 'inline-block' }} />
+              <span>P10–P90 uncertainty band</span>
+            </div>
+            <div className="legend-item">
+              <span style={{ width: 18, height: 0, borderTop: '2px dashed #D97706', display: 'inline-block' }} />
+              <span>Conservative line</span>
             </div>
           </div>
         </div>
@@ -487,18 +538,37 @@ export default function Dashboard() {
               )}
 
               {/* Other previous vintages */}
-              {otherVintages.map((v: EvolutionVersion, idx: number) => (
-                <div key={idx} className="vintage-item">
-                  <div className="vintage-left-meta">
-                    <span className="vintage-pub-time">
-                      {formatUtcDateTime(v.publishTime)} UTC
-                    </span>
-                    <span className="vintage-gen-mw">
-                      {Math.round(v.forecastMW).toLocaleString()} MW
-                    </span>
+              {otherVintages.map((v: EvolutionVersion, idx: number) => {
+                const isPost = v.isPostCutoff;
+                return (
+                  <div
+                    key={idx}
+                    className={`vintage-item ${isPost ? 'vintage-post-cutoff' : ''}`}
+                    style={isPost ? { opacity: 0.55, background: '#F8FAFC' } : {}}
+                  >
+                    <div className="vintage-left-meta">
+                      <span className="vintage-pub-time" style={isPost ? { color: '#94A3B8' } : {}}>
+                        {formatUtcDateTime(v.publishTime)} UTC
+                      </span>
+                      <span className="vintage-gen-mw" style={isPost ? { color: '#94A3B8' } : {}}>
+                        {Math.round(v.forecastMW).toLocaleString()} MW
+                      </span>
+                    </div>
+                    {isPost && (
+                      <span style={{
+                        fontSize: '0.68rem',
+                        fontWeight: 600,
+                        color: '#64748B',
+                        background: '#E2E8F0',
+                        padding: '2px 8px',
+                        borderRadius: '6px'
+                      }}>
+                        published after cutoff, not used
+                      </span>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Bottom Info Callout Box */}
@@ -565,7 +635,7 @@ export default function Dashboard() {
               </span>
             </div>
             <div className="accuracy-table-row">
-              <span className="accuracy-label">Matched settlement periods</span>
+              <span className="accuracy-label">Matched hourly periods (from 1,488 half-hours)</span>
               <span className="accuracy-value">
                 {summary?.matchedPeriods != null ? `${summary.matchedPeriods.toLocaleString()} / ${summary.totalPeriods.toLocaleString()}` : '744 / 744'}
               </span>

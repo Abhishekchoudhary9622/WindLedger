@@ -103,6 +103,7 @@ export interface EvolutionVersion {
   forecastMW: number;
   horizonHours: number;
   isSelected: boolean;
+  isPostCutoff?: boolean;
 }
 
 export interface EvolutionResponse {

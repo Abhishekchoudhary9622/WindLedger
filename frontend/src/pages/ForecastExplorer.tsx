@@ -15,6 +15,7 @@ import {
   formatUtcDate,
   formatUtcDateTime,
   formatUtcPublish,
+  formatDecisionCutoffLabel,
 } from '../utils/formatDate';
 
 export default function ForecastExplorer() {
@@ -39,6 +40,7 @@ export default function ForecastExplorer() {
     forecastMW: v.forecastMW,
     horizonHours: v.horizonHours,
     isSelected: v.isSelected,
+    isPostCutoff: v.isPostCutoff,
   })) || [];
 
   const selectedVersion = evolution?.versions?.find((v: EvolutionVersion) => v.isSelected);
@@ -86,9 +88,9 @@ export default function ForecastExplorer() {
           <div className="select-pill">
             <span style={{ fontSize: '0.75rem', color: '#64748B' }}>Cutoff:</span>
             <select value={cutoffTime} onChange={e => setCutoffTime(e.target.value)}>
-              <option value="09:20">09:20 (EPEX Day-Ahead)</option>
-              <option value="10:00">10:00 (Standard Cutoff)</option>
-              <option value="11:00">11:00 (Nord Pool)</option>
+              <option value="09:20">09:20 (EPEX Day-Ahead - UK time / UTC)</option>
+              <option value="09:50">09:50 (Nord Pool Day-Ahead - UK time / UTC)</option>
+              <option value="10:00">10:00 (Post-Auction Benchmark)</option>
               <option value="12:00">12:00 (Noon)</option>
             </select>
           </div>
@@ -103,7 +105,7 @@ export default function ForecastExplorer() {
               Revision Trajectory for {formatUtcDate(selectedDate)}, {selectedHour} UTC
             </div>
             <div className="card-heading-subtitle">
-              Evolution of published forecasts vs. final actual generation ({evolution?.actualMW != null ? `${evolution.actualMW.toLocaleString()} MW` : '—'})
+              {formatDecisionCutoffLabel(selectedDate, cutoffTime)}
             </div>
           </div>
           {selectedVersion && (
@@ -115,18 +117,21 @@ export default function ForecastExplorer() {
 
         <div style={{ width: '100%', height: 340 }}>
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 15, right: 20, left: 10, bottom: 20 }}>
+            <LineChart data={chartData} margin={{ top: 15, right: 20, left: 25, bottom: 35 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
               <XAxis
                 dataKey="publishLabel"
                 stroke="#94A3B8"
-                fontSize={11}
+                fontSize={10}
                 tickLine={false}
                 axisLine={{ stroke: '#E2E8F0' }}
+                interval={chartData.length > 8 ? Math.ceil(chartData.length / 6) : 0}
                 angle={-20}
                 textAnchor="end"
+                height={40}
               />
               <YAxis
+                width={65}
                 stroke="#94A3B8"
                 fontSize={11}
                 tickLine={false}
@@ -214,18 +219,20 @@ export default function ForecastExplorer() {
             <tbody>
               {chartData.map((v, i) => {
                 const diff = evolution?.actualMW != null ? v.forecastMW - evolution.actualMW : null;
+                const isPost = v.isPostCutoff;
                 return (
                   <tr
                     key={i}
                     style={{
                       borderBottom: '1px solid #F1F5F9',
-                      background: v.isSelected ? '#F0FDF4' : 'transparent',
+                      background: v.isSelected ? '#F0FDF4' : isPost ? '#F8FAFC' : 'transparent',
+                      opacity: isPost ? 0.6 : 1,
                     }}
                   >
-                    <td style={{ padding: '10px 14px', fontWeight: 600, color: '#0F172A' }}>
+                    <td style={{ padding: '10px 14px', fontWeight: 600, color: isPost ? '#64748B' : '#0F172A' }}>
                       {v.publishFull}
                     </td>
-                    <td style={{ padding: '10px 14px', fontFamily: 'var(--font-mono)', fontWeight: 600, color: '#2563EB' }}>
+                    <td style={{ padding: '10px 14px', fontFamily: 'var(--font-mono)', fontWeight: 600, color: isPost ? '#64748B' : '#2563EB' }}>
                       {v.forecastMW.toLocaleString()} MW
                     </td>
                     <td style={{ padding: '10px 14px', fontFamily: 'var(--font-mono)', fontWeight: 600, color: diff && diff < 0 ? '#059669' : '#EF4444' }}>
@@ -237,6 +244,10 @@ export default function ForecastExplorer() {
                     <td style={{ padding: '10px 14px' }}>
                       {v.isSelected ? (
                         <span className="pill-selected-green">Selected for Cutoff</span>
+                      ) : isPost ? (
+                        <span style={{ fontSize: '0.72rem', color: '#64748B', background: '#E2E8F0', padding: '3px 8px', borderRadius: '6px' }}>
+                          published after cutoff, not used
+                        </span>
                       ) : (
                         <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>Past revision</span>
                       )}

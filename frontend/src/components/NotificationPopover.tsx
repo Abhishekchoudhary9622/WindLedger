@@ -15,10 +15,10 @@ export interface NotificationItem {
 const INITIAL_NOTIFICATIONS: NotificationItem[] = [
   {
     id: 'notif-1',
-    title: 'High Balancing Cashout Risk',
-    message: '14 Jan 18:00 UTC: Forecast over-predicted by +2,840 MW during evening peak ramp. Estimated balancing cashout penalty: £142,500.',
+    title: 'High Balancing Cashout Risk (Simulated)',
+    message: '14 Jan 18:00 UTC: Forecast over-predicted by +2,840 MW during evening peak ramp. Estimated illustrative cashout delta.',
     timestamp: '2 hours ago',
-    isRead: false,
+    isRead: true,
     priority: 'urgent',
     targetPath: '/?date=2026-01-14',
     icon: '🚨'
@@ -28,17 +28,17 @@ const INITIAL_NOTIFICATIONS: NotificationItem[] = [
     title: 'Severe Down-Ramp (>2,400 MW)',
     message: '25 Jan 14:00 UTC: Wind dropped -2,420 MW over 2 settlement hours. Decision forecast anticipated 52% of magnitude.',
     timestamp: '5 hours ago',
-    isRead: false,
+    isRead: true,
     priority: 'warning',
     targetPath: '/analytics?date=2026-01-25',
     icon: '🌪️'
   },
   {
     id: 'notif-3',
-    title: 'EPEX SPOT 09:20 Cutoff Locked',
-    message: 'Day-ahead purchase decisions locked for 15 Jan delivery. 24 hourly periods cached in columnar Parquet store.',
+    title: 'EPEX SPOT 09:20 Cutoff (UK Time / UTC)',
+    message: 'Day-ahead purchase decisions locked for 15 Jan delivery. 24 hourly periods evaluated.',
     timestamp: '1 day ago',
-    isRead: false,
+    isRead: true,
     priority: 'info',
     targetPath: '/forecast-explorer?date=2026-01-15',
     icon: '⚡'

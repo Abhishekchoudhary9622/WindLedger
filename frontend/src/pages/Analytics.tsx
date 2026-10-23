@@ -106,9 +106,9 @@ export default function Analytics() {
           <div className="filter-pill-btn">
             <span style={{ fontSize: '0.75rem', color: '#64748B' }}>Cutoff:</span>
             <select value={cutoff} onChange={e => setCutoff(e.target.value)}>
-              <option value="09:20">09:20 (EPEX Day-Ahead)</option>
-              <option value="10:00">10:00 (Standard Cutoff)</option>
-              <option value="11:00">11:00 (Nord Pool)</option>
+              <option value="09:20">09:20 (EPEX Day-Ahead - UK time / UTC)</option>
+              <option value="09:50">09:50 (Nord Pool Day-Ahead - UK time / UTC)</option>
+              <option value="10:00">10:00 (Post-Auction Benchmark)</option>
               <option value="12:00">12:00 (Noon)</option>
             </select>
           </div>
@@ -127,10 +127,10 @@ export default function Analytics() {
           </div>
           <div style={{ width: '100%', height: 260 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={horizons || []} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+              <BarChart data={horizons || []} margin={{ top: 10, right: 10, left: 15, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
                 <XAxis dataKey="bucket" stroke="#94A3B8" fontSize={11} tickLine={false} axisLine={{ stroke: '#E2E8F0' }} />
-                <YAxis stroke="#94A3B8" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${v} MW`} />
+                <YAxis width={65} stroke="#94A3B8" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${v} MW`} />
                 <Tooltip
                   contentStyle={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 8, fontSize: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
                   formatter={(val: any, name: any) => [`${Math.round(val).toLocaleString()} MW`, name]}
@@ -152,7 +152,7 @@ export default function Analytics() {
           </div>
           <div style={{ width: '100%', height: 260 }}>
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={daily || []} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+              <ComposedChart data={daily || []} margin={{ top: 10, right: 10, left: 15, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F1F5F9" />
                 <XAxis
                   dataKey="date"
@@ -162,7 +162,7 @@ export default function Analytics() {
                   axisLine={{ stroke: '#E2E8F0' }}
                   tickFormatter={(d: string) => formatUtcDayOnly(d)}
                 />
-                <YAxis stroke="#94A3B8" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${v} MW`} />
+                <YAxis width={65} stroke="#94A3B8" fontSize={11} tickLine={false} axisLine={false} tickFormatter={(v: number) => `${v} MW`} />
                 <Tooltip
                   contentStyle={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 8, fontSize: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
                   labelFormatter={(d: any) => `${formatUtcDate(d)} UTC`}
