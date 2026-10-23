@@ -80,7 +80,7 @@ async def data_summary():
     ),
 )
 async def export_csv(
-    cutoff: str = Query("09:20", description="Decision cutoff time on D-1 (09:20 or 10:00)"),
+    cutoff: str = Query("09:20", description="Decision cutoff on D-1 ('09:20' EPEX SPOT auction gate closure, '09:50' Nord Pool N2EX order book gate closure, or '10:00' Nord Pool results benchmark)"),
     date_from: str = Query("2026-01-01", description="Start date (YYYY-MM-DD)"),
     date_to: str = Query("2026-01-31", description="End date (YYYY-MM-DD)"),
 ):

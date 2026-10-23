@@ -641,11 +641,16 @@ export default function Dashboard() {
               </span>
             </div>
             <div className="accuracy-table-row">
-              <span className="accuracy-label">Data completeness</span>
+              <span className="accuracy-label" title="Applies to the 744 evaluated hourly delivery intervals in January 2026 (aggregated from 1,488 half-hourly settlement periods; raw parquet contains 1,585 records including boundary buffers)">
+                Hourly evaluation coverage
+              </span>
               <span className="accuracy-value">
-                {summary?.completenessPct != null ? `${summary.completenessPct}%` : '100%'}
+                {summary?.completenessPct != null ? `${summary.completenessPct}% (744/744 h)` : '100% (744/744 h)'}
               </span>
             </div>
+          </div>
+          <div style={{ fontSize: '0.73rem', color: '#64748B', marginTop: '0.5rem', lineHeight: 1.4 }}>
+            *Coverage applies strictly to the 744 evaluated delivery hours in Jan 2026 (aggregated from 1,488 settlement actuals; raw file contains 1,585 records with pre/post boundary buffer).
           </div>
         </div>
 

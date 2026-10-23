@@ -78,3 +78,22 @@ def test_forecast_evolution():
     assert len(selected) == 1
     # Selected version publishTime must be <= 2026-01-14 09:20
     assert pd.to_datetime(selected[0]["publishTime"]) <= pd.to_datetime("2026-01-14 09:20:00+00:00")
+
+
+@pytest.mark.parametrize("cutoff_time,expected_max_cutoff", [
+    ("09:20", "2026-01-14 09:20:00+00:00"),  # EPEX SPOT GB Day-Ahead auction gate closure
+    ("09:50", "2026-01-14 09:50:00+00:00"),  # Nord Pool N2EX GB Day-Ahead order book gate closure
+    ("10:00", "2026-01-14 10:00:00+00:00"),  # Nord Pool post-auction benchmark publication
+])
+def test_reconciled_market_cutoffs(cutoff_time, expected_max_cutoff):
+    fc = get_forecasts()
+    act = get_actuals()
+    df = compute_decision_forecast(fc, act, "2026-01-15", cutoff_time)
+    assert len(df) == 24
+    max_ts = pd.to_datetime(expected_max_cutoff)
+    assert (df["publishTime"] <= max_ts).all()
+    # Physical constraints
+    assert (df["bandP10"] >= 0).all()
+    assert (df["conservativeMW"] >= 0).all()
+    assert (df["bandP10"] <= df["bandP90"]).all()
+    assert (df["conservativeMW"] <= df["forecastMW"]).all()

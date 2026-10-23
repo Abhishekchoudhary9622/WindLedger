@@ -95,7 +95,20 @@ export default function Settings() {
               In Great Britain, electricity settlement operates on <strong>30-minute settlement periods</strong> (48 periods per day, totaling 1,488 periods across January). However, the National Grid ESO wind forecast (<strong>WINDFOR</strong>) is published on an <strong>hourly resolution</strong> (744 hours across January).
             </p>
             <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 10, padding: '14px', fontSize: '0.825rem' }}>
-              <strong>Aggregation Logic:</strong> To evaluate forecasts without temporal distortion, each hour's two 30-minute FUELHH outturn records (e.g. 00:00–00:30 and 00:30–01:00) are averaged to form the ground-truth hourly delivery outturn. This produces exactly <strong>744 hourly delivery periods</strong> matching 100% of January 2026.
+              <strong>Source-Record Proof of Hourly Native Resolution:</strong>
+              <ul style={{ margin: '6px 0 0 16px', lineHeight: 1.6 }}>
+                <li>WINDFOR has <strong>no <code>settlementPeriod</code> column</strong> (columns are <code>['dataset', 'publishTime', 'startTime', 'generation']</code>). In contrast, FUELHH includes <code>settlementPeriod</code> 1–48.</li>
+                <li>Auditing all 21,024 forecast records across 288 runs reveals that <strong>100.00% of consecutive startTime intervals (20,736 / 20,736 steps)</strong> are exactly 60 minutes (<code>0 days 01:00:00</code>).</li>
+                <li><strong>Aggregation Logic:</strong> To evaluate forecasts without temporal distortion, each hour's two 30-minute FUELHH outturn records (e.g. 00:00–00:30 and 00:30–01:00) are averaged into a single ground-truth hourly outturn. This produces exactly <strong>744 hourly delivery periods</strong> matching 100% of January 2026.</li>
+              </ul>
+            </div>
+            <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 10, padding: '14px', fontSize: '0.825rem' }}>
+              <strong>Parquet Dataset Composition (1,585 Raw Actuals Records):</strong>
+              <ul style={{ margin: '6px 0 0 16px', lineHeight: 1.6 }}>
+                <li><strong>Pre-buffer (49 records):</strong> 2025-12-30 23:30 to 2025-12-31 23:30 UTC, providing the D-1 decision history for Jan 1 delivery.</li>
+                <li><strong>January Delivery Evaluation Set (1,488 records):</strong> 31 days × 48 settlement periods = 1,488 half-hours, aggregating into 744 hourly delivery intervals (100% evaluation completeness).</li>
+                <li><strong>Post-buffer (48 records):</strong> 2026-02-01 00:00 to 2026-02-01 23:30 UTC boundary buffer.</li>
+              </ul>
             </div>
           </div>
         </div>
@@ -146,31 +159,38 @@ export default function Settings() {
         <div className="dashboard-card">
           <div className="card-top-header">
             <div>
-              <div className="card-heading-title">GB Day-Ahead Market Gate Closures</div>
-              <div className="card-heading-subtitle">Confirmed auction timings in UK time (same as UTC in January)</div>
+              <div className="card-heading-title">GB Day-Ahead Market Gate Closures & Reconciled Cutoffs</div>
+              <div className="card-heading-subtitle">Supported auction timings in UK time (same as UTC in January)</div>
             </div>
           </div>
 
           <div style={{ color: '#475569', fontSize: '0.875rem', lineHeight: 1.7, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
               <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 10, padding: '14px' }}>
-                <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>EPEX SPOT GB Day-Ahead</div>
+                <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>EPEX SPOT GB Day-Ahead (09:20 UTC)</div>
                 <div style={{ fontSize: '0.8rem', color: '#64748B' }}>
-                  Order book closes daily at <strong>09:20 UK time (same as UTC in January)</strong>. Results published from 09:30.
+                  Order book closes daily at <strong>09:20 UK time (same as UTC in January)</strong>. Auction results published from 09:30.
                 </div>
               </div>
 
               <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 10, padding: '14px' }}>
-                <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>Nord Pool N2EX Day-Ahead</div>
+                <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>Nord Pool N2EX Day-Ahead (09:50 UTC)</div>
                 <div style={{ fontSize: '0.8rem', color: '#64748B' }}>
                   Order book closes daily at <strong>09:50 UK time (same as UTC in January)</strong>. Auction results published by 10:00.
                 </div>
               </div>
 
               <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 10, padding: '14px' }}>
-                <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>Illustrative Scenario Features</div>
+                <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>Nord Pool Benchmark (10:00 UTC)</div>
                 <div style={{ fontSize: '0.8rem', color: '#64748B' }}>
-                  Financial cashout (SBP/SSP) penalties and bid recommendation features use illustrative pricing assumptions and are provided as optional exploration beyond the core Elexon outturn data.
+                  Post-auction results publication benchmark by <strong>10:00 UTC</strong> used for post-trade clearing analysis.
+                </div>
+              </div>
+
+              <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 10, padding: '14px' }}>
+                <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 4 }}>Optional Illustrative Simulations</div>
+                <div style={{ fontSize: '0.8rem', color: '#64748B' }}>
+                  Balancing cashout penalties (SBP/SSP) and bidding schedule recommendations use illustrative pricing assumptions and are clearly separated from core Elexon actuals and forecasts.
                 </div>
               </div>
             </div>

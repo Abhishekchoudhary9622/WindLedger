@@ -154,8 +154,22 @@ def _add_uncertainty_bands(
     delivery_date: str,
     cutoff_time: str,
 ) -> pd.DataFrame:
-    """Add P10–P90 uncertainty bands using historical errors strictly before D."""
+    """Add empirical P10–P90 uncertainty bands and conservative hedging line.
+
+    Methodology & Causal Integrity:
+    - Derivation: Historical forecast errors (error = forecast - actual) strictly prior
+      to the decision cutoff timestamp (D-1 at cutoff_time UTC) are partitioned into
+      forecast horizon buckets (12-18h, 18-24h, 24-30h, 30-36h, >36h).
+    - Zero Lookahead: Only actuals whose delivery hour finished before the decision cutoff
+      (startTime < cutoff_ts) are included in the historical error distribution. No afternoon
+      or evening outturns from D-1 are leaked into the historical distribution.
+    - Physical Bounds: Generation cannot be negative, so P10 and conservativeMW are clamped
+      to >= 0 MW, with P10 <= P90 and conservativeMW <= forecastMW.
+    """
     d = pd.Timestamp(delivery_date, tz="UTC")
+    hh, mm = map(int, cutoff_time.split(":"))
+    # Point-in-time cutoff on D-1
+    cutoff_ts = d - pd.Timedelta(days=1) + pd.Timedelta(hours=hh, minutes=mm)
 
     # Vectorized pull of all history prior to delivery_date
     full_history = _build_joined(all_forecasts, all_actuals, "2025-12-27", delivery_date, cutoff_time)
@@ -165,13 +179,18 @@ def _add_uncertainty_bands(
         decision["conservativeMW"] = np.nan
         return decision
 
-    hist = full_history[(full_history["startTime"] < d) & full_history["errorMW"].notna()].copy()
+    # Strict point-in-time filter: delivery hour must have concluded before the decision cutoff
+    hist = full_history[(full_history["startTime"] < cutoff_ts) & full_history["errorMW"].notna()].copy()
 
-    if hist.empty:
+    if hist.empty or len(hist) < 3:
         decision["bandP10"] = np.nan
         decision["bandP90"] = np.nan
         decision["conservativeMW"] = np.nan
         return decision
+
+    global_p10 = float(np.percentile(hist["errorMW"], 10))
+    global_p90 = float(np.percentile(hist["errorMW"], 90))
+    global_p90_abs = float(np.percentile(np.abs(hist["errorMW"]), 90))
 
     hist["bucket"] = hist["horizonHours"].apply(_horizon_bucket)
 
@@ -184,11 +203,25 @@ def _add_uncertainty_bands(
     decision["bucket"] = decision["horizonHours"].apply(_horizon_bucket)
     decision = decision.merge(band_stats, on="bucket", how="left")
 
-    # Band: forecast ± error percentiles
-    decision["bandP10"] = (decision["forecastMW"] - decision["p90"]).round(0)
-    decision["bandP90"] = (decision["forecastMW"] - decision["p10"]).round(0)
-    # Conservative = forecast minus P90 of absolute error
-    decision["conservativeMW"] = (decision["forecastMW"] - decision["p90_abs"]).round(0)
+    decision["p10"] = decision["p10"].fillna(global_p10)
+    decision["p90"] = decision["p90"].fillna(global_p90)
+    decision["p90_abs"] = decision["p90_abs"].fillna(global_p90_abs)
+
+    # Band: forecast - error percentiles (error = forecast - actual => actual = forecast - error)
+    # Higher error percentile means higher overforecast, so forecast - p90 is the conservative lower bound (P10 of actuals)
+    # Lower error percentile means underforecast, so forecast - p10 is the optimistic upper bound (P90 of actuals)
+    p10_series = (decision["forecastMW"] - decision["p90"]).round(0)
+    p90_series = (decision["forecastMW"] - decision["p10"]).round(0)
+    cons_series = (decision["forecastMW"] - decision["p90_abs"]).round(0)
+
+    # Physical clamping: generation cannot be negative
+    decision["bandP10"] = np.maximum(0, p10_series)
+    decision["bandP90"] = np.maximum(0, p90_series)
+    decision["conservativeMW"] = np.maximum(0, cons_series)
+
+    # Invariants: bandP10 <= bandP90 and conservativeMW <= forecastMW
+    decision["bandP10"] = np.minimum(decision["bandP10"], decision["bandP90"])
+    decision["conservativeMW"] = np.minimum(decision["conservativeMW"], decision["forecastMW"])
 
     decision = decision.drop(columns=["bucket", "p10", "p90", "p90_abs"], errors="ignore")
     return decision

@@ -54,9 +54,10 @@ TAGS_METADATA = [
     {
         "name": "trading",
         "description": (
-            "**Financial Imbalance & Trading Desk Tools** — Calculate physical short/long exposure (MWh), "
-            "simulate System Buy Price (SBP) / System Sell Price (SSP) balancing penalties (£), "
-            "generate optimal 24h bidding schedules across 3 risk postures, and run what-if stress tests."
+            "**Optional Illustrative Trading Simulations** — Models physical short/long exposure (MWh), "
+            "System Buy Price (SBP) / System Sell Price (SSP) balancing penalties (£), "
+            "and scenario bidding schedules using user-specified assumed prices. "
+            "Note: These are illustrative scenario tools and NOT verified procurement advice or official settlement accounts."
         ),
     },
     {
@@ -98,14 +99,14 @@ National Grid ESO / Elexon wind generation forecasts for day-ahead wholesale ele
 ---
 
 #### 🌟 Core Capabilities
-* **Auction Gate Closures:** Precise cutoff simulation for **EPEX SPOT (09:20 UTC)** and **Nord Pool (10:00 UTC)**.
+* **Auction Gate Closures & Benchmarks:** Explicit cutoff support for **EPEX SPOT GB Day-Ahead auction gate closure (09:20 UTC)**, **Nord Pool N2EX GB Day-Ahead order book gate closure (09:50 UTC)**, and **Nord Pool post-auction results publication benchmark (10:00 UTC)**.
 * **Official Elexon BMRS Datasets:** Ingests live streams from [FUELHH](https://bmrs.elexon.co.uk/api-documentation/endpoint/datasets/FUELHH/stream) (Actuals) and [WINDFOR](https://bmrs.elexon.co.uk/api-documentation/endpoint/datasets/WINDFOR/stream) (Forecasts).
-* **Financial Imbalance Modeling:** Quantifies balancing cashout exposure under BSC settlement rules.
+* **Optional Financial Imbalance Modeling:** Quantifies balancing cashout exposure under BSC settlement rules using user-specified illustrative prices.
 * **Wind Ramp Event Tracking:** Automated detection of volatile grid ramp events (>800 MW/hr).
 * **Sub-Millisecond Engine:** Vectorized Pandas compute kernel backed by intelligent multi-tier caching.
 
 ---
-*For support or institutional integrations, consult the endpoints below or visit the frontend portal at http://localhost:5173.*
+*For institutional integrations, consult the interactive Swagger documentation below or access the web portal.*
 """
 
 
@@ -119,7 +120,7 @@ async def lifespan(app: FastAPI):
 
     if not fc.empty and not act.empty:
         logger.info("Pre-warming analytical and trading caches for standard gate closures...")
-        for cutoff in ["09:20", "10:00"]:
+        for cutoff in ["09:20", "09:50", "10:00"]:
             _build_joined(fc, act, "2026-01-01", "2026-01-31", cutoff)
             compute_summary(fc, act, "2026-01-01", "2026-01-31", cutoff)
             compute_daily_accuracy(fc, act, "2026-01-01", "2026-01-31", cutoff)

@@ -131,6 +131,7 @@ def compute_imbalance_risk(
         "asymmetryRatio": asymmetry,
         "dailyBreakdown": daily_list,
         "topRiskDays": top_risk,
+        "disclaimer": "Optional illustrative simulation using assumed prices. Not verified procurement advice.",
     }
 
     _trading_cache[cache_key] = res
@@ -221,6 +222,7 @@ def compute_bid_recommendation(
             ),
         },
         "hourlySchedule": hourly_schedule,
+        "disclaimer": "Optional illustrative simulation using assumed prices. Not verified procurement advice.",
     }
 
 
@@ -284,4 +286,5 @@ def simulate_scenario(
             f"Scenario results in a {cost_delta_pct:+.1f}% change in balancing cashout penalties "
             f"({cost_delta:+,.0f} GBP) across January 2026."
         ),
+        "disclaimer": "Optional illustrative simulation using assumed prices. Not verified procurement advice.",
     }

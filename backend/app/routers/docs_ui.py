@@ -759,7 +759,7 @@ DOCS_HTML = r"""<!DOCTYPE html>
                       <td class="param-name">cutoff</td>
                       <td class="param-type">string</td>
                       <td><span class="badge-req-no">No</span></td>
-                      <td>Auction gate closure cutoff on D-1 (09:20 or 10:00)</td>
+                      <td>Decision cutoff on D-1: <code>09:20</code> (EPEX SPOT), <code>09:50</code> (Nord Pool gate closure), or <code>10:00</code> (Nord Pool results benchmark)</td>
                       <td><span class="param-example">09:20</span></td>
                     </tr>
                   </tbody>

@@ -24,7 +24,7 @@ router = APIRouter(prefix="/api/ramps", tags=["ramps"])
 async def get_ramps(
     date_from: str = Query("2026-01-01", description="Start date (YYYY-MM-DD)"),
     date_to: str = Query("2026-01-31", description="End date (YYYY-MM-DD)"),
-    cutoff: str = Query("09:20", description="Decision cutoff time on D-1 (09:20 or 10:00)"),
+    cutoff: str = Query("09:20", description="Decision cutoff on D-1 ('09:20' EPEX SPOT auction gate closure, '09:50' Nord Pool N2EX order book gate closure, or '10:00' Nord Pool results benchmark)"),
     threshold_mw: float = Query(800.0, description="Minimum MW generation change to qualify as a ramp event"),
     window_hours: int = Query(2, description="Ramp observation window in hours (1 to 3)"),
 ):

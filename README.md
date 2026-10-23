@@ -107,51 +107,77 @@ flowchart TB
 
 The platform directly ingests from the two official Elexon Insights Solution streams:
 1. **Actual Wind Generation (`FUELHH`)**: Metered outturn for `fuelType="WIND"`. Resolution: **30-minute settlement periods** (48 periods per day, 1,488 periods across January 2026).
-2. **Forecasted Wind Generation (`WINDFOR`)**: National wind forecast runs published multiple times daily across varying horizons. Resolution: **60-minute hourly intervals** (24 hours per day, 744 intervals across January 2026).
+### 4.1 Datasets and Native Time Resolution
+
+1. **Metered Wind Generation Actuals (`FUELHH`)**:
+   * **Source:** Elexon BMRS Open Insights API stream (`/datasets/FUELHH/stream`), filtered strictly to `fuelType = "WIND"`.
+   * **Native Resolution:** **30-minute settlement periods** (48 periods per settlement day, indexed by `settlementPeriod` 1 to 48).
+   * **Raw Dataset Size:** 1,585 records spanning 30 December 2025 (23:30 UTC) to 1 February 2026 (23:30 UTC).
+     * **Pre-buffer (49 records):** 2025-12-30 23:30 to 2025-12-31 23:30 UTC, providing the D-1 decision baseline for 1 January delivery.
+     * **January Evaluation Window (1,488 records):** Exactly 31 days × 48 settlement periods = 1,488 half-hours (100.0% data completeness).
+     * **Post-buffer (48 records):** 2026-02-01 00:00 to 23:30 UTC, boundary buffer for multi-day contract analysis.
+
+2. **Forecasted Wind Generation (`WINDFOR`)**:
+   * **Source:** Elexon BMRS Open Insights API stream (`/datasets/WINDFOR/stream`).
+   * **Native Resolution Proof:** **Conclusively confirmed as 60-minute (hourly) intervals**.
+     * `WINDFOR` records contain `['dataset', 'publishTime', 'startTime', 'generation']` with **no `settlementPeriod` column** (unlike `FUELHH`).
+     * Inspecting all 21,024 forecast records across 288 publication runs reveals that **100.00% of consecutive `startTime` deltas (`20,736 / 20,736` intervals) are exactly `0 days 01:00:00` (60 minutes)**.
+     * There is zero half-hourly granularity in `WINDFOR`.
 
 ### 4.2 Temporal Alignment and Settlement Aggregation
 
-Because settlement actuals (`FUELHH`) arrive at 30-minute intervals and forecasts (`WINDFOR`) arrive at 60-minute intervals:
-* For each target delivery hour, the two corresponding 30-minute settlement outturn values (e.g., 00:00–00:30 and 00:30–01:00) are averaged into a single ground-truth hourly outturn (MW).
-* This yields exactly **744 evaluated hourly delivery periods** covering 100% of January 2026.
-* Labels across the dashboard and API explicitly distinguish between the **744 hourly delivery periods** and the underlying **1,488 settlement half-hours**.
+Because settlement actuals (`FUELHH`) arrive at 30-minute intervals and forecasts (`WINDFOR`) arrive at native 60-minute intervals:
+* For each target delivery hour, the two corresponding 30-minute settlement outturn records (e.g., 00:00–00:30 and 00:30–01:00) are averaged into a single ground-truth hourly outturn (MW).
+* This aggregation is mathematically necessary and exact: it aligns the physical energy delivered (MWh) with the hourly forecast interval without inventing or interpolating sub-hourly forecast data.
+* **Evaluation Completeness Definition:** The platform's **100% completeness (744 / 744 periods)** metric strictly applies to the evaluated January 2026 hourly delivery set (31 days × 24 hours), aggregated from the 1,488 January half-hours in `actuals.parquet`.
 
 ### 4.3 Verified Metrics and Root Cause of the +1,852 MW Bias
 
-Recomputing metrics directly from the raw Parquet datasets (`python scripts/verify_metrics.py`) at the default D-1 09:20 UTC cutoff confirms:
+Recomputing metrics directly from the raw Parquet datasets (`python backend/scripts/verify_metrics.py`) confirms:
 
-| Metric | Value | Interpretation |
-| :--- | :--- | :--- |
-| **Evaluated Periods** | 744 hours | Complete coverage of January 2026 (31 days × 24 hours) |
-| **Mean Forecast** | 13,432.6 MW | Average day-ahead decision forecast |
-| **Mean Actual Outturn** | 11,580.7 MW | Average metered wind generation |
-| **Mean Error (Bias)** | **+1,851.9 MW** | Positive bias (forecast exceeding metered actuals) |
-| **Mean Absolute Error (MAE)** | **2,142.1 MW** | Average magnitude of forecast error |
-| **Root Mean Square Error (RMSE)** | **2,611.7 MW** | Error variance metric |
-| **Normalized MAE (nMAE)** | **18.50%** | MAE divided by mean actual outturn |
-| **Periods with Error > 1 GW** | **75.5%** | Percentage of hours with absolute error above 1,000 MW |
+| Metric | Cutoff 09:20 (EPEX) | Cutoff 09:50 (Nord Pool Gate) | Cutoff 10:00 (Nord Pool Benchmark) |
+| :--- | :--- | :--- | :--- |
+| **Hourly Evaluation Periods** | **744 / 744 h (100%)** | **744 / 744 h (100%)** | **744 / 744 h (100%)** |
+| **Mean Forecast** | 13,432.6 MW | 13,421.0 MW | 13,421.0 MW |
+| **Mean Actual Outturn** | 11,580.7 MW | 11,580.7 MW | 11,580.7 MW |
+| **Mean Error (Bias)** | **+1,851.9 MW** | **+1,840.3 MW** | **+1,840.3 MW** |
+| **Mean Absolute Error (MAE)** | **2,142.1 MW** | **2,122.8 MW** | **2,122.8 MW** |
+| **Root Mean Sq Error (RMSE)** | **2,611.7 MW** | **2,616.7 MW** | **2,616.7 MW** |
+| **Normalized MAE (nMAE)** | **18.50%** | **18.33%** | **18.33%** |
+| **Periods with Error > 1 GW** | **75.5%** | **75.3%** | **75.3%** |
 
 **Why is there a +1.85 GW forecast bias?**
 1. **Transmission vs. Embedded Wind Coverage:** In Great Britain, `FUELHH` only measures Balancing Mechanism Units (BMUs) connected directly to the high-voltage transmission network. Smaller distribution-connected ("embedded") wind farms generate power locally without appearing in `FUELHH` transmission-metered wind. Conversely, National Grid ESO's `WINDFOR` model forecasts total GB wind generation.
-2. **Storm Activity and Curtailment:** January 2026 saw significant storm activity (e.g., Storm Gorel) across the UK. During storm surges, turbines were commercially turned down via Balancing Mechanism bids to avoid local transmission bottlenecks, or automatically disconnected when wind speeds exceeded high-wind turbine cut-out limits (~25 m/s).
-3. **Reproducibility:** A standalone audit script is included in the repository. Run:
+2. **Storm Activity and Curtailment:** January 2026 saw severe Atlantic storm activity (e.g., Storm Gorel) across the UK. During storm surges, turbines were commercially turned down via Balancing Mechanism bids to avoid local transmission bottlenecks, or automatically disconnected when wind speeds exceeded high-wind turbine cut-out limits (~25 m/s).
+3. **Reproducibility:** Run the verification audit directly:
    ```bash
    python backend/scripts/verify_metrics.py
    ```
 
-### 4.4 Day-Ahead Market Gate Closures
+### 4.4 Reconciled Day-Ahead Market Gate Closures
 
-Trading decisions are evaluated on day **D-1** ahead of delivery on day **D**:
-* **EPEX SPOT GB Day-Ahead Auction:** Order book closes daily at **09:20 UK time (same as UTC in January)**. Results published from 09:30.
-* **Nord Pool N2EX GB Day-Ahead Auction:** Order book closes daily at **09:50 UK time (same as UTC in January)**. Results published by 10:00.
+The UI, API OpenAPI documentation, tests, and methodology explicitly support three reconciled decision cutoffs on day **D-1** ahead of delivery day **D**:
+* **`09:20 UTC` — EPEX SPOT GB Day-Ahead Auction Gate Closure:** The order book closes daily at 09:20 UK time (same as UTC in January). Auction results publish from 09:30 UTC.
+* **`09:50 UTC` — Nord Pool N2EX GB Day-Ahead Order Book Gate Closure:** The order book closes daily at 09:50 UK time (same as UTC in January).
+* **`10:00 UTC` — Nord Pool Post-Auction Results Publication Benchmark:** Official auction clearing results are published by 10:00 UTC.
 
-The application strictly filters `publishTime <= cutoff` on day D-1, ensuring zero lookahead bias. Any forecast published after cutoff is marked `"published after cutoff, not used"`.
+**Point-in-Time Causality:** For any delivery day D and cutoff `HH:MM`, the decision timestamp is strictly `cutoff_ts = (D - 1 day) at HH:MM:00 UTC`. The engine selects the single latest forecast with `publishTime <= cutoff_ts`. Any forecast published after cutoff is strictly disqualified.
 
-### 4.5 Scope and Illustrative Features
+### 4.5 Empirical Uncertainty Bands & Causal Integrity
 
-The core scope of the project focuses on Elexon wind actuals and forecasts. Additional features provided in the platform:
-* **Balancing Cashout Risk & Bid Strategy Modeling:** Use illustrative BSC System Buy/Sell Price assumptions and are explicitly labeled as illustrative scenario models rather than core historical outturns.
-* **P10–P90 Uncertainty Bands & Conservative Line:** Derived from empirical historical error quantiles prior to delivery day D (no lookahead leakage) and drawn directly on the primary dashboard chart.
+* **Derivation:** Historical forecast errors ($error = forecast - actual$) strictly prior to the D-1 decision cutoff timestamp (`startTime < cutoff_ts`) are partitioned into forecast horizon buckets (12–18h, 18–24h, 24–30h, 30–36h, >36h).
+* **Zero Lookahead Leakage:** By enforcing `startTime < cutoff_ts`, no afternoon or evening actuals from day D-1 are leaked into the historical training distribution at decision time.
+* **Formulas:**
+  * **P10 Band (Conservative Lower Bound):** $\max(0, \text{Forecast} - \text{P90}_{\text{error}})$
+  * **P90 Band (Optimistic Upper Bound):** $\max(0, \text{Forecast} - \text{P10}_{\text{error}})$
+  * **Conservative Hedging Line:** $\max(0, \min(\text{Forecast}, \text{Forecast} - \text{P90}_{|\text{error}|}))$
+* **Physical Constraints:** Wind generation cannot be negative, so all lower bounds are clamped to $\ge 0$ MW.
+
+### 4.6 Optional Illustrative Trading Simulations
+
+The core assessment focuses exclusively on Elexon wind actuals and forecasts. To illustrate how trading desks use these forecasts, optional simulation endpoints (`/api/trading/*`) model balancing cashout exposure under GB BSC settlement rules using user-assumed prices (e.g. £75/MWh Day-Ahead price, £35/MWh System Buy Price surcharge).
+* **Clear Distinction:** These features are explicitly documented and returned with `disclaimer: "Optional illustrative simulation using assumed prices. Not verified procurement advice."`
+* They must not be conflated with official Elexon settlement figures or verified procurement advice.
 
 ---
 

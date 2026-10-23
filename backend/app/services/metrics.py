@@ -71,6 +71,12 @@ def compute_summary(
         "correlation": round(corr, 2),
         "totalActualGWh": total_gwh,
         "completenessPct": round(float(len(valid) / max(len(joined), 1) * 100), 1),
+        "evaluationScope": "Hourly delivery intervals in selected evaluation window",
+        "completenessDescription": (
+            f"Coverage of selected hourly delivery window ({len(valid)}/{len(joined)} hours matched with outturns). "
+            f"Applies strictly to the aggregated hourly delivery evaluation set (January 2026 = 744 hours from 1,488 half-hourly settlement periods; "
+            f"raw actuals parquet contains 1,585 records including pre/post boundary buffers)."
+        ),
         "p50Error": round(float(np.percentile(abs_errors, 50)), 1),
         "p90Error": round(float(np.percentile(abs_errors, 90)), 1),
         "p95Error": round(float(np.percentile(abs_errors, 95)), 1),

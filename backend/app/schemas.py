@@ -67,6 +67,9 @@ class AccuracySummary(BaseModel):
     matched_periods: int = Field(..., alias="matchedPeriods")
     total_periods: int = Field(..., alias="totalPeriods")
     mean_actual: float = Field(..., alias="meanActual")
+    completeness_pct: Optional[float] = Field(None, alias="completenessPct")
+    evaluation_scope: Optional[str] = Field(None, alias="evaluationScope")
+    completeness_description: Optional[str] = Field(None, alias="completenessDescription")
     model_config = {"populate_by_name": True}
 
 
@@ -176,6 +179,10 @@ class ImbalanceRiskResponse(BaseModel):
     asymmetry_ratio: float = Field(..., alias="asymmetryRatio")
     daily_breakdown: list[DailyImbalance] = Field(..., alias="dailyBreakdown")
     top_risk_days: list[DailyImbalance] = Field(..., alias="topRiskDays")
+    disclaimer: Optional[str] = Field(
+        "Optional illustrative simulation using assumed prices. Not verified procurement advice.",
+        alias="disclaimer",
+    )
     model_config = {"populate_by_name": True}
 
 
@@ -210,6 +217,10 @@ class BidRecommendationResponse(BaseModel):
     pricing_parameters: dict = Field(..., alias="pricingParameters")
     strategy_summary: StrategySummary = Field(..., alias="strategySummary")
     hourly_schedule: list[HourlyBid] = Field(..., alias="hourlySchedule")
+    disclaimer: Optional[str] = Field(
+        "Optional illustrative simulation using assumed prices. Not verified procurement advice.",
+        alias="disclaimer",
+    )
     model_config = {"populate_by_name": True}
 
 
@@ -231,6 +242,10 @@ class ScenarioSimulationResponse(BaseModel):
     simulated_long_mwh: float = Field(..., alias="simulatedLongMWh")
     simulated_mae_mw: float = Field(..., alias="simulatedMaeMW")
     impact_summary: str = Field(..., alias="impactSummary")
+    disclaimer: Optional[str] = Field(
+        "Optional illustrative simulation using assumed prices. Not verified procurement advice.",
+        alias="disclaimer",
+    )
     model_config = {"populate_by_name": True}
 
 
